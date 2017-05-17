@@ -1,6 +1,7 @@
+library(plyr)
 #Constants to store data URL, zip and the folder
 fileURL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip "
-zipFolder <- "getdata_dataset.zip"
+zipFolder <- "dataset.zip"
 folder <- "UCI HAR Dataset"
 activityLabelsFile <- paste(folder,"activity_labels.txt", sep = "/")
 activityFeaturesFile <- paste(folder, "features.txt", sep = "/")
@@ -13,15 +14,13 @@ if(!file.exists(folder)){
   download.file(fileURL, zipFolder, method="curl")
   if(!file.exists(zipFolder)){
     print("Error Downloading Data.")
-    quit("yes")
   }
-  unzip(zipfile = filename)
-  unlink(zipFileName)
+  unzip(zipfile = zipFolder)
+  unlink(zipFolder)
 }
 
 if(!file.exists(trainingDataFolder) || !file.exists(testingDataFolder)){
   print("Error Downloading Data.")
-  quit("yes")
 }
 
 #Read activity and feature table
@@ -34,8 +33,11 @@ dfFeatures[,2] <- as.character(dfFeatures[,2])
 featureIdx <- grep(".*mean*.|.*std*.", dfFeatures[,2])
 featureNames <- dfFeatures[featureIdx, 2]
 featureNames <- gsub('[-()]', '', featureNames)
-featureNames = gsub('mean', 'Mean', featureNames)
-featureNames = gsub('std', 'Std', featureNames)
+featureNames <- gsub('mean', 'Mean', featureNames)
+featureNames <- gsub('std', 'Std', featureNames)
+featureNames <- gsub('^t', 'Time', featureNames)
+featureNames <- gsub('^f', 'Frequency', featureNames)
+featureNames <- gsub('BodyBody', 'Body', featureNames)
 
 trainingData <- read.table(paste(trainingDataFolder, "X_train.txt", sep = "/"))[featureIdx]
 trainActivitiesData <- read.table(paste(trainingDataFolder, "Y_train.txt", sep = "/"))
@@ -48,4 +50,8 @@ testSubjectsData <- read.table(paste(testingDataFolder, "subject_test.txt", sep 
 testingDataComplete <- cbind(testSubjectsData, testActivitiesData, testingData)
 
 data<-rbind(trainingDataComplete, testingDataComplete)
+data[,2] <- dfActivity[data[,2], 2]
 colnames(data) = c("Subject", "Activity", featureNames)
+
+averages_data <- ddply(data, .(Subject, Activity), function(x) colMeans(x[, 3:79]))
+write.table(averages_data, "tidydataset.txt", row.name=FALSE)
