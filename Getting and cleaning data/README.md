@@ -1,4 +1,4 @@
-##This is a course project for getting and cleaning data course of Coursera.
+## This is a course project for getting and cleaning data course of Coursera.
 
 The program performs the following functions:
 
