@@ -1,0 +1,76 @@
+---
+title: "Data Analysis"
+author: "Parthasarathy Krishnamurthy"
+output: html_document
+---
+
+##Overview
+
+The objective of this exercise is to use confidence intervals to compare data. For this we will be using a dataset provided by R programming language. 
+
+
+##Data load
+
+The ToothGrowth dataset is loaded.
+
+```{r}
+library(datasets)
+data(ToothGrowth)
+summary(ToothGrowth)
+```
+
+The above result is basic summary of the ToothGrowth dataset.
+
+Let's look at some sample data.
+
+```{r}
+head(ToothGrowth)
+```
+
+To know thw unique values of supplementary type and dosage.
+
+```{r}
+unique(ToothGrowth$supp)
+unique(ToothGrowth$dose)
+```
+
+We plot some of the important features to perform data analysis.
+
+```{r}
+library(lattice)
+xyplot(len~dose|supp, ToothGrowth, main="Tooth length by dose for each supplement type", ylab="Length", xlab="Dose")
+```
+
+The basic analysis of data tells us that it represents the length of the teeth at various dosage levels of vitamins for each of the 2 delivery methods (VC and OJ).
+
+##Tooth growth by supplementary type and dosage.
+
+We will perform this analysis using the t-test.
+
+First lets obtain the difference between groups of data with different supplementary types. Lets assume unequal variances between the 2 groups.
+
+```{r}
+t.test(len ~ supp, data = ToothGrowth)
+```
+
+The p value is 0.06 which is greater than 0.05 and confidence levels moves from negative to positive. So the confidence level has a value of zero, so based on this test the supplement types have no impact on tooth growth.
+
+Next lets compare tooth growth by dosage.
+
+```{r}
+t.test(len ~ dose, data=subset(ToothGrowth, dose %in% c(0.5, 1.0)))
+t.test(len ~ dose, data=subset(ToothGrowth, dose %in% c(0.5, 2.0)))
+t.test(len ~ dose, data=subset(ToothGrowth, dose %in% c(1.0, 2.0)))
+```
+
+For all the 3 tests above, the p value is less than 0.05. Also none of the confidence levels move from negative to positive which means they do not have a zero value. This suggests that on increasing the dosage, the tooth length also increases. 
+
+
+##Conclusion
+
+The conclusions are based on the following assumptions:
+
+1. The sample is representative of the population.
+2. The supplement type is independent of dosage.
+
+In conclusion, the supplement type has no effect on the tooth length (or growth). The mean tooth length increases on raising the dosage.

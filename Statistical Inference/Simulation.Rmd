@@ -1,0 +1,79 @@
+---
+title: "Statistical Inference - Simulation Exercise"
+author: "Parthasarathy Krishnamurthy"
+output: html_document
+---
+
+##Overview
+
+The main purpose of this exercise is to work with exponential distribution in R programming language. The results of this exercise can then be compared with Central Limit theorem. The values obtained are then to be compared to the theoritical values.
+
+The following instruction were provided to proceed with the exercise:
+
+1. The mean and standard deviation of exponential distribution is 1/lambda.
+2. Lambda is set to 0.2
+3. Investigate distribution of averages of 40 exponentials.
+4. Perform 1000 simulations. 
+
+##Simulations
+
+The code below sets the value of lambda, number of exponentials and simulations as per the exercise instruction. The simulations are run and the mean is calculated. Then finally a plot of means is plotted.
+
+```{r}
+lambda <- 0.2
+numOfExp <- 40
+simulations <- 1000
+expSimulations <- replicate(simulations, rexp(numOfExp, lambda))
+meansExp <- apply(expSimulations, 2, mean)
+hist(meansExp, breaks = 40, main = "Simulation of exponential function")
+```
+
+##Sample Mean vs Theoritical Mean
+
+To calculate the theoritical mean we use the instructions provided. So, the theoritical mean is 1/lambda which is 1/0.2 = 5.
+
+```{r}
+meanOfExp <- mean(meansExp)
+paste("The mean from sample", meanOfExp, sep = " ")
+```
+
+The above value is close to theoritical mean. 
+
+Also, we can verify the result in plot.
+
+```{r}
+hist(meansExp, breaks = 40, main = "Simulation of exponential function")
+abline(v=mean(meansExp), lwd="4", col="green")
+```
+
+The mean in the plot is closer to theortical value of mean.
+
+##Sample Variance vs Theoritical Variance.
+
+The standard variation is calculated by formula (1/lambda)/square root of n. Square of standard variation gives us the theoritical mean.
+
+To calculate sample variance we can use the R language's in built function sd and we square it to obtain variance.
+
+```{r}
+theorySD <- (1/lambda)/sqrt(numOfExp)
+theoryVar <- theorySD^2
+sampleSD <- sd(meansExp)
+sampleVar <- sampleSD^2
+paste("The sample variance is", sampleVar, "as compared to theoritical variance of", theoryVar, sep = " ")
+```
+
+
+##Distribution
+
+The last section of this exercise is to verify if the distribution is close to normal and hence proving Central Limit theorem.
+
+```{r}
+hist(meansExp, breaks = 40, main = "Simulation of exponential function", prob=TRUE)
+lines(density(meansExp), lwd=3, col="red")
+
+x <- seq(min(meansExp), max(meansExp), length=2*numOfExp)
+y <- dnorm(x, mean=1/lambda, sd=sqrt(((1/lambda)/sqrt(numOfExp))^2))
+lines(x, y, pch=22, col="black", lwd=2, lty = 2)
+```
+
+As seen in the above plot the distribution curve (red) is similar to the normal distribution (dotted black). Thus the distribution of means of our sample appear to follow normal distribution and follow Central Limit Theorem.
