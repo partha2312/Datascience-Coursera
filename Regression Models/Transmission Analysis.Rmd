@@ -1,0 +1,93 @@
+---
+title: "Regression Models"
+author: "Parthasarathy Krishnamurthy"
+output: html_document
+---
+
+##Executive Summary
+
+This exercise is to determine the performance of cars in various types of transmissions - manual and automatic. For the purpose of this analysis we use the mtcars dataset. The focus of this assignment would be to determine how the Miles Per Gallon or mpg is related to a set of variables in automatic and manual transmissions.
+
+The general perception is cars with manual transmission have a slightly better MPG than with cars with automatic transmission.
+
+We perform exploratory data analysis, simple and multiple regression models to prove the above hypothesis. From all the analysis we can prove that the manual transmission has MPG more than automatic tranmission.
+
+##Data
+
+We use the mtcars dataset. Lets take a look at the structure of data and few rows from dataset.
+
+```{r}
+names(mtcars)
+head(mtcars)
+```
+
+##Exploratory Data Analysis
+
+For the purpose of this analysis we will categorize the am column - which tells us if the model is automatic or manual transmission.
+
+```{r}
+mtcars$am <- as.factor(mtcars$am)
+```
+
+Lets plot a box plot of MPG vs transmission
+
+```{r}
+boxplot(mpg ~ am, data=mtcars, xlab="Transmission", ylab="MPG", main="MPG vs. Transmission (0 = Automatic, 1 = Manual)")
+```
+
+From the box plot we can see that manual transmission has higher MPG compared to automatic.
+
+We can also perform a T-test to verify this. Lets perform a T-test on mean of data for 2 sets of tranmission.
+
+```{r}
+t <- t.test(mpg ~ factor(am), data=mtcars)
+t$p.value;
+t$estimate
+```
+
+The p-value is much less than 0.05 which means we can reject the null hypothesis. The mean of mpg of manual cars is higher than mean of mpg of automatic cars.
+
+##Regression models
+
+###Simple linear regression model
+
+We will fit a simple linear regression model with am as the independent variable while calculating depedency of mpg.
+
+```{r}
+s <- lm(mpg ~ factor(am), data=mtcars)
+summary(s)
+```
+
+P-value is less than 0.05, so null hypothesis can be rejected. The adjusted R-squared value which explains the percentage of variance is at 0.3385 which means only a third of the variance is considered. So we need to include more variables.
+
+###Multivariable regression model
+
+We will fit a multivariable regression model with a step function which will help us determine the best fit model.
+
+```{r}
+m = step(lm( data=mtcars, mpg ~ .),trace=0,steps=10000)
+summary(m)
+```
+
+From adjusted R-squared value we see that about 83% of variance is explained with this model. So in addition to transmission we need am, qsec and wt since they have the highest relation with MPG.
+
+```{r}
+final <- lm(mpg ~ am + wt + qsec, data=mtcars)
+summary(final)
+```
+
+As expected 83% of variance is explained with this model. The MPG of automatic is higher to manual by 2.93 when the above factors are considered.
+
+
+##Residual Analysis
+
+```{r}
+par(mfrow = c(2,2))
+plot(final)
+```
+
+The normal Q-Q have all points on the line which shows the residuals are normally distributed.The points on 1st plot is scattered which shows the residuals and fitted are independent.
+
+##Conslusion
+
+The above analysis supported the hypothesis that manual transmission has better MPG than automatic transmission.
