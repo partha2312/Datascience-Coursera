@@ -1,0 +1,21 @@
+---
+title: "Locating Statue of Liberty"
+author: "Parthasarathy Krishnamurthy"
+date: "6/30/2017"
+---
+
+This aim of this exercise is to use leaflet and display a map in the browser. 
+
+Down below you will see the location of Statue of Liberty (one of my favorite location in the US).
+
+If you click on the little ballon which is the location, you will get a pop up. Click on the link provided and you can know more about that location.
+
+```{r}
+library(leaflet)
+my_map <- leaflet() %>%
+addTiles()
+StatueOfLiberty <- c("<a href= 'https://www.nps.gov/stli/index.htm'>Statue of Liberty</a>")
+leaflet() %>%
+addTiles() %>%
+addMarkers(lat=40.6892, lng=-74.0445, popup = StatueOfLiberty)
+```
