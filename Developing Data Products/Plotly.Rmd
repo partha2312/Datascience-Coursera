@@ -1,0 +1,13 @@
+---
+title: "Plotly"
+author: "Parthasarathy Krishnamurthy"
+date: "7/1/2017"
+output:
+  slidy_presentation: default
+---
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+library(plotly)
+plot_ly(mtcars, x = mtcars$hp, y = mtcars$mpg, mode = "markers", color = as.factor(mtcars$am)) %>%
+layout(title="Variance in MPG due to Horse Power in Automatic (0) vs Manual transmission (1)", xaxis = list(title="Horse Power"), yaxis = list(title="Miles Per Gallon"))
+```
