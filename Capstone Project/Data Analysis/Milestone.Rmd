@@ -1,0 +1,121 @@
+---
+title: "Milestone Report"
+author: "Parthasarathy Krishnamurthy"
+date: "8/9/2017"
+output: html_document
+---
+
+## Executive Summary
+
+As part of the Data Science Capstone project, the milestone report demonstrates our understanding of the course by testing all skills acquired as part of Data Science pipeline. For the purpose of this milestone report we will be using Capstone dataset provided by Coursera.This milestone report describes the major features of the training data with our exploratory data analysis and summarizes our plans for creating the predictive model.
+
+## Getting the data
+
+We download the file from link provided. I have downloaded the file, so I will download if the file doesn't exist.
+
+```{r}
+if (!file.exists("final")) {
+  download.file("https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip")
+  unzip("Coursera-SwiftKey.zip")
+}
+```
+
+The dataset consists of data from 3 sources: 1. News 2. Blogs and 3. Twitter. The data are available in 4 languages but we will focus only on data in English language.
+
+```{r, cache=TRUE}
+blogs <- readLines("final/en_US/en_US.blogs.txt", encoding = "UTF-8", skipNul = TRUE)
+news <- readLines("final/en_US/en_US.news.txt", encoding = "UTF-8", skipNul = TRUE)
+twitter <- readLines("final/en_US/en_US.twitter.txt", encoding = "UTF-8", skipNul = TRUE)
+```
+
+We can now perform some basic analysis of these text files. Lets calculate the file size, number of lines in each file and number of words. This will give us an idea of size of the dataset we are going to use for our analysis.
+
+```{r}
+library(stringi)
+
+
+blogs.size <- file.info("final/en_US/en_US.blogs.txt")$size / 1024 ^ 2
+news.size <- file.info("final/en_US/en_US.news.txt")$size / 1024 ^ 2
+twitter.size <- file.info("final/en_US/en_US.twitter.txt")$size / 1024 ^ 2
+
+
+blogs.words <- stri_count_words(blogs)
+news.words <- stri_count_words(news)
+twitter.words <- stri_count_words(twitter)
+
+data.frame(source = c("blogs", "news", "twitter"),
+           file.size.MB = c(blogs.size, news.size, twitter.size),
+           num.lines = c(length(blogs), length(news), length(twitter)),
+           num.words = c(sum(blogs.words), sum(news.words), sum(twitter.words)))
+```
+
+## Cleaning Data
+
+Next step is to clean the data. This step is crucial as the data we are about to further perform our analysis on may contain punctuations, special characters, urls or stop words. We remove these characeters and have a tidy dataset.
+
+Since the dataset is huge (as seen from our Getting the data section), we select 2% of the data to perform our analysis.
+
+```{r, cache=TRUE}
+library(tm)
+set.seed(2017)
+data.sample <- c(sample(blogs, length(blogs) * 0.1),
+                 sample(news, length(news) * 0.1),
+                 sample(twitter, length(twitter) * 0.1))
+
+corpus <- VCorpus(VectorSource(data.sample))
+corpus <- tm_map(corpus, tolower)
+corpus <- tm_map(corpus, removeWords, stopwords("en"))
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, stripWhitespace)
+corpus <- tm_map(corpus, PlainTextDocument)
+```
+
+## Exploratory Analysis
+
+Now we derive some information about the data. In this exercise we find most frequent occuring words. We then plot the common unigrams, bigrams and trigrams.
+
+```{r, cache=TRUE}
+library(tm)
+library(RWeka)
+library(ggplot2)
+
+frequency <- function(x) {
+  freq <- sort(rowSums(as.matrix(x)), decreasing = TRUE)
+  return(data.frame(word = names(freq), freq = freq))
+}
+
+bigram <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
+trigram <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
+quadgram <- function(x) NGramTokenizer(x, Weka_control(min = 4, max = 4))
+
+freq1 <- frequency(removeSparseTerms(TermDocumentMatrix(corpus), 0.9999))
+freq2 <- frequency(removeSparseTerms(TermDocumentMatrix(corpus, control = list(tokenize = bigram)), 0.9999))
+freq3 <- frequency(removeSparseTerms(TermDocumentMatrix(corpus, control = list(tokenize = trigram)), 0.9999))
+freq4 <- frequency(removeSparseTerms(TermDocumentMatrix(corpus, control = list(tokenize = quadgram)), 0.9999))
+
+saveRDS(freq1, file = "uninew.RData")
+saveRDS(freq2, file = "binew.RData")
+saveRDS(freq3, file = "trinew.RData")
+saveRDS(freq4, file = "quadnew.RData")
+
+ggplot(freq1[1:25,], aes(reorder(word, -freq), freq)) +
+         labs(x = "Common Unigrams", y = "Frequency") +
+         theme(axis.text.x = element_text(angle = 90, size = 10, hjust = 1)) +
+         geom_bar(stat = "identity", fill = I("Red"))
+
+ggplot(freq2[1:25,], aes(reorder(word, -freq), freq)) +
+         labs(x = "Common Bigrams", y = "Frequency")+
+         theme(axis.text.x = element_text(angle = 90, size = 10, hjust = 1)) +
+         geom_bar(stat = "identity", fill = I("Red"))
+
+ggplot(freq3[1:25,], aes(reorder(word, -freq), freq)) +
+         labs(x = "Common Trigrams", y = "Frequency")+
+         theme(axis.text.x = element_text(angle = 90, size = 10, hjust = 1)) +
+         geom_bar(stat = "identity", fill = I("Red"))
+
+```
+
+##What's next ?
+
+The exploratory analysis gave us an idea of distribution of words in the data files. The next step is to create a shiny app. The backend of the app will be a prediction algorithm. The trigram, bigram and unigram model created in exploratory data analysis can be used to predict the next word. 
